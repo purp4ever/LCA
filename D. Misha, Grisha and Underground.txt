@@ -1,0 +1,79 @@
+#include<bits/stdc++.h>
+#include<unordered_map>
+#define pb push_back
+#define F first
+#define S second
+#define MEM(dp,i) memset(dp,i,sizeof(dp))
+#define R return
+using namespace std;
+typedef long long ll;
+typedef double D;
+typedef pair<int,int> pii;
+typedef pair<ll,ll> pll;
+const int MX=1e5+9;
+const ll INF=(1ll<<60);
+const int inf=(1<<30);
+const ll mod=1e9+7;
+int n,q,a,b,c,dp[20][MX],lvl[MX],ans;
+vector<int>v[MX];
+bool vis[MX];
+void dfs(int x,int p){
+    if(vis[x])return;
+    vis[x]=1;
+    for(auto pp:v[x]){
+        if(pp==p)continue;
+        lvl[pp]=lvl[x]+1;
+        dp[0][pp]=x;
+        dfs(pp,x);
+    }
+}
+int lca(int x,int y){
+    if(lvl[x]<lvl[y])swap(x,y);
+    int X=x,Y=y;
+    for(int i=18;i>=0;i--){
+        int par=dp[i][x];
+        if(lvl[par]<lvl[y])continue;
+        x=par;
+    }
+    if(x==y)return y;
+    for(int i=18;i>=0;i--){
+        int p1=dp[i][x],p2=dp[i][y];
+        if(p1==0||p2==0||p1==p2)continue;
+        x=p1;
+        y=p2;
+    }
+    return dp[0][x];
+}
+int try_(int a,int b,int c){
+    int ab=lca(a,b);
+    int bc=lca(c,b);
+    int ac=lca(a,c);
+    int abc=lca(a,bc);
+    return max(0,lvl[bc]-max(lvl[ab],lvl[ac]))+max(0,lvl[ab]-(max(lvl[ab],lvl[ac])))
+            +max(0,lvl[a]-max(lvl[ab],lvl[ac]))+1;
+}
+///lca(a,b)->b lca(a,b)->a
+///lca(a,c)->c lca(a,c)->a
+int main(){
+    scanf("%d%d",&n,&q);
+    for(int i=2;i<=n;i++){
+        scanf("%d",&a);
+        v[a].pb(i);
+        v[i].pb(a);
+    }
+    lvl[1]=1;
+    dfs(1,-1);
+    for(int i=1;i<=18;i++){
+        for(int j=1;j<=n;j++){
+            dp[i][j]=dp[i-1][dp[i-1][j]];
+        }
+    }
+    while(q--){
+        ans=0;
+        scanf("%d%d%d",&a,&b,&c);
+        ans=max(ans,try_(a,b,c));
+        ans=max(ans,try_(b,a,c));
+        ans=max(ans,try_(c,a,b));
+        printf("%d\n",ans);
+    }
+}

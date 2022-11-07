@@ -1,0 +1,116 @@
+#include <bits/stdc++.h>
+#define ll long long
+using namespace std;
+int pr[100009][22],n,m,pos[32],lev[200009];
+int subt[200009],szu[200009];
+vector<int>v[200009];
+void build()
+{
+    for(int i=1;i<22;i++)
+    {
+        for(int j=0;j<n;j++)
+        {
+            pr[j][i]=pr[pr[j][i-1]][i-1];
+        }
+    }
+    for(int i=1,j=0;i<=1000009;i*=2,j++)pos[j]=i;
+}
+void dfs(int x,int par,int cl)
+{
+    pr[x][0]=par;
+    lev[x]=cl;
+    subt[x]=1;
+    for(int i=0;i<v[x].size();i++)
+    {
+        int y=v[x][i];
+        if(y==par)continue;
+        dfs(y,x,cl+1);
+        subt[x]+=subt[y];
+    }
+}
+void dfs2(int x,int par)
+{
+    for(int i=0;i<v[x].size();i++)
+    {
+        int y=v[x][i];
+        if(y==par)continue;
+        szu[y]=szu[x]+subt[x]-subt[y];
+        dfs2(y,x);
+    }
+}
+int dy=0,dx=0,bx;
+int lca(int x,int y)
+{
+    for(int i=20;i>=0;i--)
+    {
+        if(lev[pr[y][i]]<lev[x])continue;
+        dy+=lev[y]-lev[pr[y][i]];
+        y=pr[y][i];
+    }
+    if(x==y)return x;
+    for(int i=20;i>=0;i--)
+    {
+        if(pr[x][i]!=pr[y][i])
+        {
+            int sum=lev[x]-lev[pr[x][i]];
+            dx+=sum;dy+=sum;
+            x=pr[x][i];y=pr[y][i];
+        }
+    }
+    bx=x;
+    dx++;
+    dy++;
+    return pr[x][0];
+}
+int parent(int x,int levs)
+{
+    for(int i=0;i<20;i++)
+    {
+        if(levs&(1<<i))x=pr[x][i];
+    }
+    return x;
+}
+int query(int x,int y)
+{
+    if(lev[x]>lev[y])swap(x,y);
+    dy=0;dx=0;
+    int lc=lca(x,y);
+    if((dy+dx)%2)return 0;
+    int mid=parent(y,(dx+dy)/2);
+    int ans=n;
+    ans-=subt[parent(y,(dx+dy)/2-1)];
+    if(mid==lc)ans-=subt[parent(x,(dx+dy)/2-1)];
+    else ans-=(szu[mid]-1);
+//    cout<<dx<<" "<<dy<<" ";
+    return ans;
+}
+int main()
+{
+    cin.tie(0);
+    cout.tie(0);
+    ios::sync_with_stdio(0);
+    cin>>n;
+    for(int i=0;i<n-1;i++)
+    {
+        int x,y;
+        cin>>x>>y;
+        x--;y--;
+        v[x].push_back(y);
+        v[y].push_back(x);
+    }
+    cin>>m;
+    dfs(0,0,0);
+    szu[0]=1;
+    dfs2(0,0);
+    build();
+    int x,y;
+    //for(int i=0;i<n;i++)cout<<subt[i]<<" ";cout<<"\n";
+   // for(int i=0;i<n;i++)cout<<szu[i]<<" ";cout<<"\n";
+    while(m--)
+    {
+        cin>>x>>y;
+        x--;y--;
+        if(x==y)cout<<n<<"\n";
+        else cout<<query(x,y)<<"\n";
+    }
+}

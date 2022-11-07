@@ -1,0 +1,121 @@
+///Some spanning tree is minimal if and only if the weight of any other edge (x, y) (not from spanning tree) is not less than the weight of the heaviest edge on the path from x to y in spanning tree.
+#include <bits/stdc++.h>
+#define ll long long
+#define fast cin.tie(0);cout.tie(0);
+#define order ios::sync_with_stdio(0);ios_base::sync_with_stdio(0);
+#define N 200009
+using namespace std;
+int n,m;
+int rep[N],sz[N];
+ll ww;
+int a[N],b[N];
+ll ew[N];
+int fnd(int x)
+{
+    if(x==rep[x])return x;
+    rep[x]=fnd(rep[x]);
+    return rep[x];
+}
+vector<int>v[N];
+void cn(int x,int y,ll w,int id)
+{
+    int ox=x,oy=y;
+    x=fnd(x);y=fnd(y);
+    if(x==y)return;
+    if(sz[x]<sz[y])swap(x,y);
+    rep[y]=x;
+    sz[x]+=sz[y];
+    ww+=w;
+    v[ox].push_back(id);
+    v[oy].push_back(id);
+}
+bool cmp(int x,int y)
+{
+    return ew[x]<ew[y];
+}
+int lc[N][29],dep[N];
+ll lw[N][29];
+void dfs(int x,int par,ll w,int d)
+{
+    lc[x][0]=par;
+    lw[x][0]=w;
+    dep[x]=d;
+    for(int i=0;i<v[x].size();i++)
+    {
+        int y;
+        if(a[v[x][i]]!=x)y=a[v[x][i]];
+        else y=b[v[x][i]];
+        if(y==par)continue;
+        dfs(y,x,ew[v[x][i]],d+1);
+    }
+}
+void proc()
+{
+    vector<int>vv;
+    vv.clear();
+    for(int i=0;i<n;i++){rep[i]=i;sz[i]=1;}
+    for(int i=0;i<m;i++)vv.push_back(i);
+    sort(vv.begin(),vv.end(),cmp);
+    for(int i=0;i<vv.size();i++)
+    {
+        int x=a[vv[i]],y=b[vv[i]];
+        ll w=ew[vv[i]];
+        cn(x,y,w,vv[i]);
+    }
+    dfs(0,0,0,0);
+    for(int i=1;i<22;i++)
+    {
+        for(int j=0;j<n;j++)
+        {
+            lc[j][i]=lc[lc[j][i-1]][i-1];
+            lw[j][i]=max(lw[j][i-1],lw[lc[j][i-1]][i-1]);
+        }
+    }
+}
+ll mx=0;
+int kth(int x,int k)
+{
+    for(int i=20;i>=0;i--)
+    {
+        if((1<<i)&k)
+        {
+            mx=max(mx,lw[x][i]);
+            x=lc[x][i];
+        }
+    }
+    return x;
+}
+void lca(int x,int y)
+{
+    mx=0;
+    if(dep[x]<dep[y])swap(x,y);
+    x=kth(x,dep[x]-dep[y]);
+    if(x==y)return;
+    for(int i=20;i>=0;i--)
+    {
+        if(lc[x][i]==lc[y][i])continue;
+        mx=max(mx,lw[x][i]);
+        mx=max(mx,lw[y][i]);
+        x=lc[x][i];
+        y=lc[y][i];
+    }
+    mx=max(mx,lw[x][0]);
+    mx=max(mx,lw[y][0]);
+}
+int main()
+{
+    fast order
+    cin>>n>>m;
+    for(int i=0;i<m;i++)
+    {
+        cin>>a[i]>>b[i]>>ew[i];
+        a[i]--;
+        b[i]--;
+    }
+    proc();
+    for(int i=0;i<m;i++)
+    {
+        lca(a[i],b[i]);
+        cout<<ww-mx+ew[i]<<"\n";
+    }
+}

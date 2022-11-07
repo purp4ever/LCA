@@ -1,0 +1,87 @@
+#include <bits/stdc++.h>
+#define ll long long
+#define fast cin.tie(0);cout.tie(0);
+#define order ios::sync_with_stdio(0);ios_base::sync_with_stdio(0);
+#define pb push_back
+using namespace std;
+int lc[100009][29];
+int n,m;
+vector<int>v[100009],dd[100009];
+int in[100009];
+int d[100009],en[100009];
+void dfs(int x,int dep=0)
+{
+    d[x]=dep;
+    for(int i=0;i<v[x].size();i++)
+    {
+        int y=v[x][i];
+        lc[y][0]=x;
+        dfs(y,dep+1);
+    }
+    en[x]=dd[dep].size();
+    dd[dep].pb(x);
+}
+int par(int x,int y)
+{
+    for(int i=25;i>=0;i--)
+    {
+        if(y&(1<<i))x=lc[x][i];
+    }
+    return x;
+}
+int main()
+{
+    fast order
+
+    cin>>n;
+    for(int i=1;i<=n;i++)
+    {
+        int x;
+        cin>>x;
+        if(!x){in[i]=1;continue;}
+        v[x].push_back(i);
+    }
+    for(int i=1;i<=n;i++)if(in[i])dfs(i);
+    for(int j=1;j<=25;j++)
+    {
+        for(int i=1;i<=n;i++)lc[i][j]=lc[lc[i][j-1]][j-1];
+    }
+   // cout<<"---\n";
+    for(int j=0;j<=n;j++)
+    {
+        for(int i=0;i<dd[j].size();i++)en[dd[j][i]]=i;
+    }
+    cin>>m;
+    while(m--)
+    {
+        int x,y;
+        cin>>x>>y;
+        int dep=d[x];
+        int p=x;
+        p=par(x,y);
+        if(!p){cout<<"0 ";continue;}
+        int l=0,r=dd[dep].size(),mid,lo,ro;
+        int c=en[x];
+        while(r-l>1)
+        {
+            mid=(r+l)/2;
+            if(c-mid<0){r=mid;continue;}
+            int o=dd[dep][c-mid];
+            if(par(o,y)==p)l=mid;
+            else r=mid;
+        }
+        lo=c-l;
+        l=0,r=dd[dep].size();
+        while(r-l>1)
+        {
+            mid=(r+l)/2;
+            if(c+mid>=dd[dep].size()){r=mid;continue;}
+            int o=dd[dep][c+mid];
+            if(par(o,y)==p)l=mid;
+            else r=mid;
+        }
+        ro=c+l;
+        cout<<ro-lo<<" ";
+    }
+
+}

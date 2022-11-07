@@ -1,0 +1,105 @@
+ 
+#include <bits/stdc++.h>
+#define ll long long
+using namespace std;
+const ll inf=1e5+9,lg=20;
+ 
+ll n,q,timer=1,CurSum;
+set<ll> CurNodes;
+vector<pair<ll,ll> > adj[inf];
+ll in[inf],depth[inf],dis[inf],parent[inf][lg],id[inf];
+ 
+void dfs(ll u,ll par){
+ 
+    in[u]=timer++;
+    id[timer-1]=u;
+    depth[u]=depth[par]+1;
+    parent[u][0]=par;
+ 
+    for(auto v:adj[u])
+        if(v.first != par)
+            dis[v.first]=dis[u]+v.second,dfs(v.first,u);
+}
+ 
+ll LCA(ll u,ll v){
+ 
+    if(depth[u] > depth[v])
+        swap(u,v);
+    ll diff=depth[v]-depth[u];
+    for(ll j=lg-1;j>=0;j--)
+        if(diff & (1ll<<j))
+            v = parent[v][j];
+ 
+    if( u == v)
+        return u;
+ 
+    for(ll j=lg-1;j>=0;j--)
+        if(parent[v][j] != parent[u][j])
+            v = parent[v][j] , u = parent[u][j];
+    return (u == v ? v : parent[v][0]);
+}
+ 
+ll Distance(ll u,ll v){
+ 
+    return dis[u]+dis[v]-2ll*dis[LCA(u,v)];
+}
+ 
+int main(){
+ 
+    scanf("%I64d",&n);
+    for(ll i=1;i<n;i++){
+        ll a,b,c;
+        scanf("%I64d%I64d%I64d",&a,&b,&c);
+        adj[a].push_back(make_pair(b,c));
+        adj[b].push_back(make_pair(a,c));
+    }
+ 
+    dfs(1,0);
+    for(ll j=1;j<lg;j++)
+        for(ll i=1;i<=n;i++)
+            parent[i][j] = parent[ parent[i][j-1] ][j-1];
+ 
+    scanf("%d",&q);
+    while(q--){
+        char type[3];
+        ll x,u=0,v=0;
+        set<ll> ::iterator it;
+        scanf("%s",type);
+ 
+        if(type[0] == '?'){
+            printf("%I64d\n",CurSum/2ll);
+            continue;
+        }
+        scanf("%I64d",&x);
+        if(type[0] == '+'){
+            CurNodes.insert(in[x]);
+            it=CurNodes.lower_bound(in[x]);
+            if(it != CurNodes.begin())
+                --it,u=id[*it],++it;
+            else
+                u=id[ *CurNodes.rbegin() ];
+            it++;
+            if(it != CurNodes.end())
+                v=id[*it],it--;
+            else
+                v=id[ *CurNodes.begin() ];
+ 
+            CurSum+=Distance(u,x)+Distance(v,x)-Distance(u,v);
+        }
+        else {
+            it=CurNodes.lower_bound(in[x]);
+            if(it != CurNodes.begin())
+                --it,u=id[*it],++it;
+            else
+                u=id[ *CurNodes.rbegin() ];
+            it++;
+            if(it != CurNodes.end())
+                v=id[*it],it--;
+            else
+                v=id[ *CurNodes.begin() ];
+ 
+            CurSum+=Distance(u,v)-Distance(u,x)-Distance(v,x);
+            CurNodes.erase(in[x]);
+        }
+    }
+}
